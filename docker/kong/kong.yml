@@ -22,6 +22,40 @@ services:
           - /api/profiles
         strip_path: false
 
+  - name: class-service
+    url: http://class-service:8000
+    routes:
+      - name: class-routes
+        paths:
+          - /api/classes
+          - /api/schema
+          - /api/docs
+        strip_path: false
+
+  - name: subject-service
+    url: http://subject-service:8000
+    routes:
+      - name: subject-routes
+        paths:
+          - /api/subjects
+        strip_path: false
+
+  - name: grade-service
+    url: http://grade-service:8000
+    routes:
+      - name: grade-routes
+        paths:
+          - /api/grades
+        strip_path: false
+
+  - name: schedule-service
+    url: http://schedule-service:8000
+    routes:
+      - name: schedule-routes
+        paths:
+          - /api/schedules
+        strip_path: false
+
 plugins:
   - name: cors
     config:

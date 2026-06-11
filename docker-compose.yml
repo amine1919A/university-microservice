@@ -1,16 +1,14 @@
 name: university-platform
 
 services:
-  # ========== Auth Service ==========
-  auth-mysql:
+  # ========== MySQL (shared for dev) ==========
+  mysql:
     image: mysql:8.0
+    shm_size: 128m
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${AUTH_DB_NAME}
-      MYSQL_USER: ${AUTH_DB_USER}
-      MYSQL_PASSWORD: ${AUTH_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
     volumes:
-      - auth_mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -20,25 +18,26 @@ services:
     networks:
       - backend
 
+  # ========== Auth Service ==========
   auth-service:
     build: ./services/auth-service
     environment:
-      DB_NAME: ${AUTH_DB_NAME}
-      DB_USER: ${AUTH_DB_USER}
-      DB_PASSWORD: ${AUTH_DB_PASSWORD}
-      DB_HOST: auth-mysql
+      DB_NAME: auth_db
+      DB_USER: auth_user
+      DB_PASSWORD: auth_password
+      DB_HOST: mysql
       DB_PORT: 3306
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
-      DJANGO_DEBUG: ${DJANGO_DEBUG}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      JWT_ACCESS_TOKEN_LIFETIME: ${JWT_ACCESS_TOKEN_LIFETIME}
-      JWT_REFRESH_TOKEN_LIFETIME: ${JWT_REFRESH_TOKEN_LIFETIME}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-jwt-dev-key}
+      JWT_ACCESS_TOKEN_LIFETIME: ${JWT_ACCESS_TOKEN_LIFETIME:-15}
+      JWT_REFRESH_TOKEN_LIFETIME: ${JWT_REFRESH_TOKEN_LIFETIME:-7}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "8101:8000"
     depends_on:
-      auth-mysql:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_started
@@ -46,44 +45,102 @@ services:
       - backend
 
   # ========== User Service ==========
-  user-mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${USER_DB_NAME}
-      MYSQL_USER: ${USER_DB_USER}
-      MYSQL_PASSWORD: ${USER_DB_PASSWORD}
-    volumes:
-      - user_mysql_data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - backend
-
   user-service:
     build: ./services/user-service
     environment:
-      DB_NAME: ${USER_DB_NAME}
-      DB_USER: ${USER_DB_USER}
-      DB_PASSWORD: ${USER_DB_PASSWORD}
-      DB_HOST: user-mysql
+      DB_NAME: user_db
+      DB_USER: user_user
+      DB_PASSWORD: user_password
+      DB_HOST: mysql
       DB_PORT: 3306
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
-      DJANGO_DEBUG: ${DJANGO_DEBUG}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
       AUTH_SERVICE_URL: http://auth-service:8000
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "8102:8000"
     depends_on:
-      user-mysql:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_started
+    networks:
+      - backend
+
+  # ========== Class Service ==========
+  class-service:
+    build: ./services/class-service
+    environment:
+      DB_NAME: class_db
+      DB_USER: class_user
+      DB_PASSWORD: class_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+    ports:
+      - "8103:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend
+
+  # ========== Subject Service ==========
+  subject-service:
+    build: ./services/subject-service
+    environment:
+      DB_NAME: subject_db
+      DB_USER: subject_user
+      DB_PASSWORD: subject_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+    ports:
+      - "8104:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend
+
+  # ========== Grade Service ==========
+  grade-service:
+    build: ./services/grade-service
+    environment:
+      DB_NAME: grade_db
+      DB_USER: grade_user
+      DB_PASSWORD: grade_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+    ports:
+      - "8105:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend
+
+  # ========== Schedule Service ==========
+  schedule-service:
+    build: ./services/schedule-service
+    environment:
+      DB_NAME: schedule_db
+      DB_USER: schedule_user
+      DB_PASSWORD: schedule_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+    ports:
+      - "8106:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
       - backend
 
@@ -104,8 +161,8 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -150,8 +207,7 @@ services:
       - backend
 
 volumes:
-  auth_mysql_data:
-  user_mysql_data:
+  mysql_data:
 
 networks:
   backend:
