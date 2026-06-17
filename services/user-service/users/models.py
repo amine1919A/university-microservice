@@ -40,3 +40,20 @@ class Teacher(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+class TeacherSpecialty(models.Model):
+    teacher = models.ForeignKey(
+        Teacher, on_delete=models.CASCADE, related_name="specialties",
+        verbose_name="Enseignant"
+    )
+    specialty = models.CharField(max_length=255, verbose_name="Spécialité")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Spécialité enseignant"
+        verbose_name_plural = "Spécialités enseignants"
+        unique_together = ["teacher", "specialty"]
+
+    def __str__(self):
+        return f"{self.teacher} - {self.specialty}"

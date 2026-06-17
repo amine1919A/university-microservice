@@ -4,6 +4,10 @@ CREATE DATABASE IF NOT EXISTS class_db CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 CREATE DATABASE IF NOT EXISTS subject_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS grade_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS schedule_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS messaging_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS live_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS complaint_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS billing_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE USER IF NOT EXISTS 'auth_user'@'%' IDENTIFIED BY 'auth_password';
 CREATE USER IF NOT EXISTS 'user_user'@'%' IDENTIFIED BY 'user_password';
@@ -11,6 +15,10 @@ CREATE USER IF NOT EXISTS 'class_user'@'%' IDENTIFIED BY 'class_password';
 CREATE USER IF NOT EXISTS 'subject_user'@'%' IDENTIFIED BY 'subject_password';
 CREATE USER IF NOT EXISTS 'grade_user'@'%' IDENTIFIED BY 'grade_password';
 CREATE USER IF NOT EXISTS 'schedule_user'@'%' IDENTIFIED BY 'schedule_password';
+CREATE USER IF NOT EXISTS 'messaging_user'@'%' IDENTIFIED BY 'messaging_password';
+CREATE USER IF NOT EXISTS 'live_user'@'%' IDENTIFIED BY 'live_password';
+CREATE USER IF NOT EXISTS 'complaint_user'@'%' IDENTIFIED BY 'complaint_password';
+CREATE USER IF NOT EXISTS 'billing_user'@'%' IDENTIFIED BY 'billing_password';
 
 GRANT ALL PRIVILEGES ON auth_db.* TO 'auth_user'@'%';
 GRANT ALL PRIVILEGES ON user_db.* TO 'user_user'@'%';
@@ -18,5 +26,9 @@ GRANT ALL PRIVILEGES ON class_db.* TO 'class_user'@'%';
 GRANT ALL PRIVILEGES ON subject_db.* TO 'subject_user'@'%';
 GRANT ALL PRIVILEGES ON grade_db.* TO 'grade_user'@'%';
 GRANT ALL PRIVILEGES ON schedule_db.* TO 'schedule_user'@'%';
+GRANT ALL PRIVILEGES ON messaging_db.* TO 'messaging_user'@'%';
+GRANT ALL PRIVILEGES ON live_db.* TO 'live_user'@'%';
+GRANT ALL PRIVILEGES ON complaint_db.* TO 'complaint_user'@'%';
+GRANT ALL PRIVILEGES ON billing_db.* TO 'billing_user'@'%';
 
 FLUSH PRIVILEGES;

@@ -1,3 +1,4 @@
+import secrets
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.password_validation import validate_password
@@ -47,6 +48,33 @@ class LoginSerializer(serializers.Serializer):
         return attrs
 
 
+class AdminCreateUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True)
+    username = serializers.CharField(required=False)
+
+    class Meta:
+        model = User
+        fields = [
+            "id", "username", "email", "first_name", "last_name",
+            "role", "phone", "password", "password2",
+        ]
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs.pop("password2"):
+            raise serializers.ValidationError({"password2": "Les mots de passe ne correspondent pas."})
+        return attrs
+
+    def create(self, validated_data):
+        password = validated_data.pop("password")
+        if "username" not in validated_data or not validated_data["username"]:
+            validated_data["username"] = validated_data["email"].split("@")[0]
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -60,3 +88,8 @@ class UserSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField()
     new_password = serializers.CharField(validators=[validate_password])
+
+
+class AdminSetPasswordSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    password = serializers.CharField(validators=[validate_password])

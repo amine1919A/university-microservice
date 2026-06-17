@@ -11,6 +11,10 @@ export default defineConfig({
         target: process.env.VITE_API_URL || 'http://kong:8000',
         changeOrigin: true,
       },
+      '/ws': {
+        target: process.env.VITE_WS_URL || 'ws://kong:8000',
+        ws: true,
+      },
     },
   },
 })

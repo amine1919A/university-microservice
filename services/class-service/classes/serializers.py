@@ -4,6 +4,7 @@ from .models import Classe, Enrollment
 
 class ClasseSerializer(serializers.ModelSerializer):
     student_count = serializers.SerializerMethodField()
+    level = serializers.ChoiceField(choices=Classe.LEVEL_CHOICES, required=False, allow_blank=True)
 
     class Meta:
         model = Classe

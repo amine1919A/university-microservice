@@ -17,7 +17,7 @@ class Classe(models.Model):
     ]
 
     name = models.CharField(max_length=50, unique=True, verbose_name="Nom de la classe")
-    level = models.CharField(max_length=10, choices=LEVEL_CHOICES, verbose_name="Niveau")
+    level = models.CharField(max_length=10, choices=LEVEL_CHOICES, blank=True, default='', verbose_name="Niveau")
     main_teacher = models.CharField(max_length=150, blank=True, verbose_name="Professeur principal")
     academic_year = models.CharField(max_length=9, default="2025-2026", verbose_name="Année scolaire")
     capacity = models.PositiveIntegerField(default=35, verbose_name="Capacité")

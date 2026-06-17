@@ -8,8 +8,8 @@ class GradeSerializer(serializers.ModelSerializer):
         fields = [
             "id", "student_external_id", "student_name", "subject_external_id",
             "subject_name", "class_external_id", "teacher_external_id",
-            "semester", "academic_year", "grade", "coefficient", "comment",
-            "created_at", "updated_at",
+            "grade_type", "semester", "academic_year", "grade", "coefficient",
+            "comment", "created_at", "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { User, LoginCredentials, RegisterData } from '../types'
+import type { User, LoginCredentials } from '../types'
 import api from '../services/api'
 
 interface AuthState {
@@ -7,7 +7,6 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   login: (credentials: LoginCredentials) => Promise<void>
-  register: (data: RegisterData) => Promise<void>
   logout: () => void
   loadUser: () => Promise<void>
 }
@@ -19,13 +18,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (credentials) => {
     const { data } = await api.post('/auth/login/', credentials)
-    localStorage.setItem('access_token', data.access)
-    localStorage.setItem('refresh_token', data.refresh)
-    set({ user: data.user, isAuthenticated: true })
-  },
-
-  register: async (registerData) => {
-    const { data } = await api.post('/auth/register/', registerData)
     localStorage.setItem('access_token', data.access)
     localStorage.setItem('refresh_token', data.refresh)
     set({ user: data.user, isAuthenticated: true })

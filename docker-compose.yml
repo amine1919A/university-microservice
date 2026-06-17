@@ -4,23 +4,34 @@ services:
   # ========== MySQL (shared for dev) ==========
   mysql:
     image: mysql:8.0
-    shm_size: 128m
+    shm_size: 64m
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 128M
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_ROOT_HOST: "%"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      - ./docker/mysql/conf/my.cnf:/etc/mysql/conf.d/my.cnf:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
+    restart: always
     networks:
       - backend
 
   # ========== Auth Service ==========
   auth-service:
     build: ./services/auth-service
+    restart: unless-stopped
     environment:
       DB_NAME: auth_db
       DB_USER: auth_user
@@ -47,6 +58,7 @@ services:
   # ========== User Service ==========
   user-service:
     build: ./services/user-service
+    restart: unless-stopped
     environment:
       DB_NAME: user_db
       DB_USER: user_user
@@ -71,6 +83,7 @@ services:
   # ========== Class Service ==========
   class-service:
     build: ./services/class-service
+    restart: unless-stopped
     environment:
       DB_NAME: class_db
       DB_USER: class_user
@@ -90,6 +103,7 @@ services:
   # ========== Subject Service ==========
   subject-service:
     build: ./services/subject-service
+    restart: unless-stopped
     environment:
       DB_NAME: subject_db
       DB_USER: subject_user
@@ -109,6 +123,7 @@ services:
   # ========== Grade Service ==========
   grade-service:
     build: ./services/grade-service
+    restart: unless-stopped
     environment:
       DB_NAME: grade_db
       DB_USER: grade_user
@@ -128,6 +143,7 @@ services:
   # ========== Schedule Service ==========
   schedule-service:
     build: ./services/schedule-service
+    restart: unless-stopped
     environment:
       DB_NAME: schedule_db
       DB_USER: schedule_user
@@ -177,6 +193,7 @@ services:
   # ========== Kong API Gateway (DB-less mode) ==========
   kong:
     image: kong:3.6
+    restart: unless-stopped
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
@@ -194,13 +211,103 @@ services:
     networks:
       - backend
 
+  # ========== Messaging Service ==========
+  messaging-service:
+    build: ./services/messaging-service
+    restart: unless-stopped
+    environment:
+      DB_NAME: messaging_db
+      DB_USER: messaging_user
+      DB_PASSWORD: messaging_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      AUTH_SERVICE_URL: http://auth-service:8000
+      REDIS_URL: redis://redis:6379/1
+    ports:
+      - "8107:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - backend
+
+  # ========== Live Service ==========
+  live-service:
+    build: ./services/live-service
+    restart: unless-stopped
+    environment:
+      DB_NAME: live_db
+      DB_USER: live_user
+      DB_PASSWORD: live_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      AUTH_SERVICE_URL: http://auth-service:8000
+      REDIS_URL: redis://redis:6379/2
+    ports:
+      - "8108:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - backend
+
+  # ========== Complaint Service ==========
+  complaint-service:
+    build: ./services/complaint-service
+    restart: unless-stopped
+    environment:
+      DB_NAME: complaint_db
+      DB_USER: complaint_user
+      DB_PASSWORD: complaint_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      AUTH_SERVICE_URL: http://auth-service:8000
+    ports:
+      - "8109:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend
+
+  # ========== Billing Service ==========
+  billing-service:
+    build: ./services/billing-service
+    restart: unless-stopped
+    environment:
+      DB_NAME: billing_db
+      DB_USER: billing_user
+      DB_PASSWORD: billing_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-key}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      AUTH_SERVICE_URL: http://auth-service:8000
+    ports:
+      - "8110:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend
+
   # ========== Frontend ==========
   frontend:
     build: ./frontend
     ports:
       - "3000:3000"
-    environment:
-      VITE_API_URL: http://localhost:8000
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
     depends_on:
       - kong
     networks:

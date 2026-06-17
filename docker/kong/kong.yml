@@ -56,6 +56,46 @@ services:
           - /api/schedules
         strip_path: false
 
+  - name: messaging-service
+    url: http://messaging-service:8000
+    routes:
+      - name: messaging-routes
+        paths:
+          - /api/messaging
+        strip_path: false
+
+  - name: live-service
+    url: http://live-service:8000
+    routes:
+      - name: live-routes
+        paths:
+          - /api/live
+        strip_path: false
+
+  - name: live-ws
+    url: http://live-service:8000
+    routes:
+      - name: live-ws-routes
+        paths:
+          - /ws/live
+        strip_path: false
+
+  - name: complaint-service
+    url: http://complaint-service:8000
+    routes:
+      - name: complaint-routes
+        paths:
+          - /api/reclamations
+        strip_path: false
+
+  - name: billing-service
+    url: http://billing-service:8000
+    routes:
+      - name: billing-routes
+        paths:
+          - /api/billing
+        strip_path: false
+
 plugins:
   - name: cors
     config:
