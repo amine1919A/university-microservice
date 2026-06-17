@@ -1,0 +1,60 @@
+name: Deploy
+on:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changed services
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            auth-service: services/auth-service/**
+            user-service: services/user-service/**
+            class-service: services/class-service/**
+            subject-service: services/subject-service/**
+            grade-service: services/grade-service/**
+            schedule-service: services/schedule-service/**
+            messaging-service: services/messaging-service/**
+            live-service: services/live-service/**
+            complaint-service: services/complaint-service/**
+            billing-service: services/billing-service/**
+            frontend: frontend/**
+            infrastructure: docker-compose.yml docker/kong/kong.yml docker/mysql/**
+
+      - name: Show changed services
+        run: |
+          echo "Changed: ${{ toJSON(steps.changes.outputs) }}"
+
+      - name: Build changed services
+        run: |
+          CHANGED=""
+          for service in auth-service user-service class-service subject-service grade-service schedule-service messaging-service live-service complaint-service billing-service; do
+            if [ "${{ steps.changes.outputs[format('{0}', service)] }}" == "true" ]; then
+              echo "Building $service..."
+              docker compose build $service
+              CHANGED="$CHANGED $service"
+            fi
+          done
+          if [ -z "$CHANGED" ]; then
+            echo "No service changes detected"
+          fi
+
+      - name: Build frontend
+        if: steps.changes.outputs.frontend == 'true'
+        run: docker compose build frontend
+
+      - name: Deploy all services
+        run: docker compose up -d
+
+      - name: Clean old images
+        run: docker image prune -f
