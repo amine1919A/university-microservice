@@ -25,6 +25,16 @@ class AssignmentListCreateView(generics.ListCreateAPIView):
     filter_backends = [filters.SearchFilter]
     search_fields = ["subject__name", "teacher_name", "class_name"]
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        teacher_id = self.request.query_params.get("teacher_external_id")
+        class_id = self.request.query_params.get("class_external_id")
+        if teacher_id:
+            qs = qs.filter(teacher_external_id=teacher_id)
+        if class_id:
+            qs = qs.filter(class_external_id=class_id)
+        return qs
+
 
 class AssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SubjectAssignment.objects.all()
